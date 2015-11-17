@@ -1,14 +1,17 @@
-/*
-  program.c
-  Name: Kristian Welsh
-  Candidate Num: 
+/* program.c Name: Kristian Welsh Candidate Num: 
   Description:
   A program that keeps track of tabel tenis scores.
   xx/xx/xxxx
 */
 
+/*https://stackoverflow.com/questions/9655202/how-to-convert-integer-to-string-in-c*/
+/* dude, remember about ^N when editing. */
+
 #include <stdio.h>
 #include <string.h>
+
+#define NUM_ROUND_1_MATCHES 8
+#define NUM_GAMES_PER_MATCH 5
 
 struct player
 {
@@ -19,15 +22,16 @@ struct match
 {
   struct player player1;
   struct player player2;
-  int p1Scores[5];
-  int p2Scores[5];
+  int p1Scores[NUM_GAMES_PER_MATCH];
+  int p2Scores[NUM_GAMES_PER_MATCH];
   int gamesPlayed;
+  int matchNum;
 };
 
 struct round
 {
-  struct match matches[8];
-  struct player playersAdvancing[8];
+  struct match matches[NUM_ROUND_1_MATCHES];
+  struct player playersAdvancing[NUM_ROUND_1_MATCHES];
   int roundNum;
 };
 
@@ -40,12 +44,12 @@ struct data
 struct round userInputPlayerNames();
 void displayPlayerNames(struct round round1);
 void displayMenuScreen(void);
-void displayRound(int);
+struct round displayRound(struct round round);
 
 int getMenuSelection(void);
 struct data switchScreen(int input, struct data);
 struct round enterGameResult(struct round round);
-void displayMatch(int);
+struct match displayMatch(struct match match);
 void displayPlayersAdvancing(int);
 
 void clearInputBuffer(void);
@@ -53,10 +57,7 @@ void haltProgram(void);
 
 int main(void)
 {
-  struct player players[5];
   struct data data;
-  struct round round1, round2, round3;
-  int shouldExit;
   int screenNum;
 
   puts("Max player name length: 32");
@@ -74,8 +75,6 @@ int main(void)
     data = switchScreen(screenNum, data);
   }
 
-  haltProgram();
-
   return 0;
 }
 
@@ -83,13 +82,11 @@ struct round userInputPlayerNames()
 {
   int matchNum;
   struct match curMatch;
-  int matchPlayerNum;
   int playerNum = 1;
   struct round round1;
+  int scoreNum;
 
-  round1.roundNum = 1;
-
-  for(matchNum = 0; matchNum < 8; matchNum++)
+  for(matchNum = 0; matchNum < NUM_ROUND_1_MATCHES; matchNum++)
   {
     curMatch = round1.matches[matchNum];
     printf("Please enter name for player %d: ", playerNum++);
@@ -101,7 +98,18 @@ struct round userInputPlayerNames()
     clearInputBuffer();
 
     curMatch.gamesPlayed = 0;
+    curMatch.matchNum = matchNum;
+    round1.matches[matchNum] = curMatch;
+
+    for(scoreNum = 0; scoreNum < NUM_GAMES_PER_MATCH; scoreNum++)
+    {
+      round1.matches[matchNum].p1Scores[scoreNum] = -1;
+      round1.matches[matchNum].p2Scores[scoreNum] = -1;
+    }
   }
+
+  round1.roundNum = 1;
+
   return round1;
 }
 
@@ -141,13 +149,16 @@ struct data switchScreen(int input, struct data data)
       data.rounds[curRound] = enterGameResult(data.rounds[curRound]);
       break;
     case 2:
-      displayRound(curRound);/*display current round*/
+      displayRound(data.rounds[curRound]);
       break;
     case 3:
-      displayPlayersAdvancing(curRound);/*display advancing*/
+      displayPlayersAdvancing(curRound);
       break;
     case 4:
-      displayRound(curRound);/*display previous round*/
+      if(curRound >= 1)
+      {
+        data.rounds[curRound] = displayRound(data.rounds[curRound-1]);
+      }
       break;
   }
   return data;
@@ -164,37 +175,100 @@ struct round enterGameResult(struct round round)
          "\n"
          "Enter match number to add game results to: ", round.roundNum);
   scanf("%d", &matchNum);
+  matchNum--;
   curMatch = round.matches[matchNum];
 
-  printf("Please enter %s's score: ", "bob");
+
+  /* matchFinished not implemented 
+  if(matchFinished(match))
+  {
+    printf("Match has already finished");
+    return round;
+  }
+*/
+  printf("Please enter %s's score: ", curMatch.player1.name);
   scanf("%d", &player1Score);
   curMatch.p1Scores[curMatch.gamesPlayed] = player1Score;
 
-  printf("Please enter %s's score: ", "bill");
+  printf("Please enter %s's score: ", curMatch.player2.name);
   scanf("%d", &player2Score);
-  curMatch.p1Scores[curMatch.gamesPlayed] = player2Score;
+  curMatch.p2Scores[curMatch.gamesPlayed] = player2Score;
 
   curMatch.gamesPlayed++;
+
+  round.matches[matchNum] = curMatch;
 
   return round;
 }
 
-void displayRound(int roundNum)
+struct round displayRound(struct round round)
 {
+  int matchNum;
+
   printf("* Display Round Results *\n"
          "\n"
          "Results for round %d:\n"
-         "\n", roundNum);
-  displayMatch(1);
+         "\n", round.roundNum);
+
+  for(matchNum = 0; matchNum < NUM_ROUND_1_MATCHES; matchNum++)
+  {
+    displayMatch(round.matches[matchNum]);
+  }
+
+  return round;
 }
 
-void displayMatch(int matchNum)
+struct match displayMatch(struct match match)
 {
+  int curScore;
+  char p1Scores[NUM_GAMES_PER_MATCH][3] = {
+    "  ",
+    "  ",
+    "  ",
+    "  ",
+    "  "};
+  char p2Scores[NUM_GAMES_PER_MATCH][3] = {
+    "  ",
+    "  ",
+    "  ",
+    "  ",
+    "  "};
+
+  for(curScore = 0; curScore < NUM_GAMES_PER_MATCH; curScore++)
+  {
+    if(match.p1Scores[curScore] == -1)
+    {
+      strcpy(p1Scores[curScore], "xx");
+    }
+    else
+    {
+      itoa(match.p1Scores[curScore], p1Scores[curScore], 10);
+    }
+  }
+
+  for(curScore = 0; curScore < NUM_GAMES_PER_MATCH; curScore++)
+  {
+    if(match.p2Scores[curScore] == -1)
+    {
+      strcpy(p2Scores[curScore], "xx");
+    }
+    else
+    {
+      itoa(match.p2Scores[curScore], p2Scores[curScore], 10);
+    }
+  }
+
   printf("Match %d:\n"
-         "+-----------------------------+\n"
-         "| %32s |%2d|%2d|%2d|%2d|%2d|\n"
-         "+-----------------------------+\n"
-         "\n", matchNum, "name here", 1, 2, 3, 4, 5);
+         "+-------------------------------------------------+\n"
+         "| %32s |%2s|%2s|%2s|%2s|%2s|\n"
+         "+-------------------------------------------------+\n"
+         "| %32s |%2s|%2s|%2s|%2s|%2s|\n"
+         "+-------------------------------------------------+\n"
+         "\n", match.matchNum + 1,
+         match.player1.name, p1Scores[0], p1Scores[1],
+         p1Scores[2], p1Scores[3], p1Scores[4],
+         match.player2.name, p2Scores[0], p2Scores[1],
+         p2Scores[2], p2Scores[3], p2Scores[4]);
 }
 
 void displayPlayersAdvancing(int roundNum)
