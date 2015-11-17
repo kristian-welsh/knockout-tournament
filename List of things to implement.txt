@@ -1,0 +1,20 @@
+Run Program
+	Get Names
+	Display Menu
+		Display Menu * Expect When Exit
+			Display Options
+			Accept  Input
+				Validate Input
+				Screen 1 - Game Result Entry o
+          Display Header
+          Accept  Match Number
+            Validate Input
+          Accept Player 1 Score
+            Validate Input
+          Accept Player 2 Score
+            Validate Input
+				Screen 2 - Display Round o
+					B
+				Screen 3 - Display Players Advancing o
+					C
+				Exit Menu o

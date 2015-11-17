@@ -1,2 +1,1 @@
-program.exe < test-input.dat
-
+@ program.exe < test-input.dat

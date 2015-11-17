@@ -1,7 +1,7 @@
 /*
   program.c
   Name: Kristian Welsh
-  Candidate Number: 
+  Candidate Num: 
   Description:
   A program that keeps track of tabel tenis scores.
   xx/xx/xxxx
@@ -29,49 +29,74 @@ struct round
   struct player playersAdvancing[8];
 };
 
-void haltProgram(void);
-void userInputPlayerNames(struct player players[]);
-void displayPlayerNames(struct player players[]);
+struct round userInputPlayerNames();
+void displayPlayerNames(struct round round1);
 void displayMenuScreen(void);
 void displayRound(int);
+
 int getMenuSelection(void);
-void clearInputBuffer(void);
+int switchScreen(int);
+void enterGameResult(int);
 void displayMatch(int);
+void displayPlayersAdvancing(int);
+
+void clearInputBuffer(void);
+void haltProgram(void);
 
 int main(void)
 {
   struct player players[5];
   struct round round1, round2, round3;
+  int shouldExit;
 
   puts("Max player name length: 32");
-  userInputPlayerNames(players);
-  displayPlayerNames(players);
+  round1 = userInputPlayerNames();
+
   haltProgram();
+
   displayMenuScreen();
   getMenuSelection();
+
   printf("\n\n");
-  displayRound(1);
+  switchScreen(1);
+
   haltProgram();
 }
 
-void userInputPlayerNames(struct player players[])
+struct round userInputPlayerNames()
 {
-  int index;
+  int matchNum;
+  int matchPlayerNum;
+  int playerNum = 1;
+  struct round round1;
 
-  for(index = 0; index < 5; index++)
+  for(matchNum = 0; matchNum < 8; matchNum++)
   {
-    printf("Please enter name for player %d: ", index);
-    scanf("%32[^\n]", players[index].name);
+    printf("Please enter name for player %d: ", playerNum++);
+    scanf("%32[^\n]", round1.matches[matchNum].player1.name);
+    clearInputBuffer();
+
+    printf("Please enter name for player %d: ", playerNum++);
+    scanf("%32[^\n]", round1.matches[matchNum].player2.name);
+    clearInputBuffer();
   }
+  return round1;
 }
 
-void displayPlayerNames(struct player players[])
+/* unused atm */
+void displayPlayerNames(struct round round1)
 {
-  int index;
+  int matchNum;
+  int playerNum = 1;
+  struct match match;
 
-  for(index = 0; index < 5; index++)
+  for(matchNum = 0; matchNum < 8; matchNum++)
   {
-    printf("name of player %d: %s\n", index, players[index].name);
+    match = round1.matches[matchNum];
+    printf("name of player %d: %s\n",
+           playerNum++, match.player1.name);
+    printf("name of player %d: %s\n",
+           playerNum++, match.player2.name);
   }
 }
 
@@ -101,29 +126,83 @@ int getMenuSelection(void)
   return input;
 }
 
-void displayRound(int roundNumber)
+int switchScreen(int input)
+{
+  switch(input)
+  {
+    case 1:
+      enterGameResult(1);/*enter game result*/
+      break;
+    case 2:
+      displayRound(1);/*display current round*/
+      break;
+    case 3:
+      displayPlayersAdvancing(1);/*display advancing*/
+      break;
+    case 4:
+      displayRound(1);/*display previous round*/
+      break;
+    case 5:
+      return 1;
+  }
+  return 0;
+}
+
+void enterGameResult(int roundNum)
+{
+  int matchNum;
+  int player1Score;
+  int player2Score;
+
+  printf("Entering a result for round %d:\n"
+         "\n"
+         "Enter match number to add game results to: ", roundNum);
+  scanf("%d", &matchNum);
+  clearInputBuffer();
+  printf("Please enter %s's score: ", "bob");
+  scanf("%d", &player1Score);
+  printf("Please enter %s's score: ", "bill");
+  scanf("%d", &player2Score);
+}
+
+void displayRound(int roundNum)
 {
   printf("* Display Round Results *\n"
          "\n"
          "Results for round %d:\n"
-         "\n", roundNumber);
+         "\n", roundNum);
   displayMatch(1);
 }
 
-void displayMatch(int matchNumber)
+void displayMatch(int matchNum)
 {
   printf("Match %d:\n"
          "+-----------------------------+\n"
          "| %32s |%2d|%2d|%2d|%2d|%2d|\n"
          "+-----------------------------+\n"
-         "\n", matchNumber, "name here", 1, 2, 3, 4, 5);
+         "\n", matchNum, "name here", 1, 2, 3, 4, 5);
+}
+
+void displayPlayersAdvancing(int roundNum)
+{
+  int i;
+
+  printf("Players advancing from round %d:", roundNum);
+  for(i = 0; i < 5; i++)
+  {
+    printf("%s\n", "bob");
+  }
 }
 
 void clearInputBuffer(void)
 {
+  /*
+  fflush(stdin);
+  /**/
   char token;
   do
   {
     token = getchar();
   } while(token != '\n' && token != '\r' && token != EOF);
+  /**/
 }
