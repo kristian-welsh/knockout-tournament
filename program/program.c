@@ -21,12 +21,20 @@ struct match
   struct player player2;
   int p1Scores[5];
   int p2Scores[5];
+  int gamesPlayed;
 };
 
 struct round
 {
   struct match matches[8];
   struct player playersAdvancing[8];
+  int roundNum;
+};
+
+struct data
+{
+  struct round rounds[3];
+  int currentRound;
 };
 
 struct round userInputPlayerNames();
@@ -35,8 +43,8 @@ void displayMenuScreen(void);
 void displayRound(int);
 
 int getMenuSelection(void);
-int switchScreen(int);
-void enterGameResult(int);
+struct data switchScreen(int input, struct data);
+struct round enterGameResult(struct round round);
 void displayMatch(int);
 void displayPlayersAdvancing(int);
 
@@ -46,58 +54,55 @@ void haltProgram(void);
 int main(void)
 {
   struct player players[5];
+  struct data data;
   struct round round1, round2, round3;
   int shouldExit;
+  int screenNum;
 
   puts("Max player name length: 32");
-  round1 = userInputPlayerNames();
+  data.rounds[0] = userInputPlayerNames();
+  data.currentRound = 0;
 
   haltProgram();
 
-  displayMenuScreen();
-  getMenuSelection();
+  while(screenNum != 5)
+  {
+    displayMenuScreen();
+    screenNum = getMenuSelection();
 
-  printf("\n\n");
-  switchScreen(1);
+    printf("\n\n");
+    data = switchScreen(screenNum, data);
+  }
 
   haltProgram();
+
+  return 0;
 }
 
 struct round userInputPlayerNames()
 {
   int matchNum;
+  struct match curMatch;
   int matchPlayerNum;
   int playerNum = 1;
   struct round round1;
 
+  round1.roundNum = 1;
+
   for(matchNum = 0; matchNum < 8; matchNum++)
   {
+    curMatch = round1.matches[matchNum];
     printf("Please enter name for player %d: ", playerNum++);
-    scanf("%32[^\n]", round1.matches[matchNum].player1.name);
+    scanf("%32[^\n]", curMatch.player1.name);
     clearInputBuffer();
 
     printf("Please enter name for player %d: ", playerNum++);
-    scanf("%32[^\n]", round1.matches[matchNum].player2.name);
+    scanf("%32[^\n]", curMatch.player2.name);
     clearInputBuffer();
+
+    curMatch.gamesPlayed = 0;
   }
   return round1;
-}
-
-/* unused atm */
-void displayPlayerNames(struct round round1)
-{
-  int matchNum;
-  int playerNum = 1;
-  struct match match;
-
-  for(matchNum = 0; matchNum < 8; matchNum++)
-  {
-    match = round1.matches[matchNum];
-    printf("name of player %d: %s\n",
-           playerNum++, match.player1.name);
-    printf("name of player %d: %s\n",
-           playerNum++, match.player2.name);
-  }
 }
 
 void haltProgram(void)
@@ -123,46 +128,55 @@ int getMenuSelection(void)
 {
   int input;
   scanf("%d", &input);
+  clearInputBuffer();
   return input;
 }
 
-int switchScreen(int input)
+struct data switchScreen(int input, struct data data)
 {
+  int curRound = data.currentRound;
   switch(input)
   {
     case 1:
-      enterGameResult(1);/*enter game result*/
+      data.rounds[curRound] = enterGameResult(data.rounds[curRound]);
       break;
     case 2:
-      displayRound(1);/*display current round*/
+      displayRound(curRound);/*display current round*/
       break;
     case 3:
-      displayPlayersAdvancing(1);/*display advancing*/
+      displayPlayersAdvancing(curRound);/*display advancing*/
       break;
     case 4:
-      displayRound(1);/*display previous round*/
+      displayRound(curRound);/*display previous round*/
       break;
-    case 5:
-      return 1;
   }
-  return 0;
+  return data;
 }
 
-void enterGameResult(int roundNum)
+struct round enterGameResult(struct round round)
 {
   int matchNum;
+  struct match curMatch;
   int player1Score;
   int player2Score;
 
   printf("Entering a result for round %d:\n"
          "\n"
-         "Enter match number to add game results to: ", roundNum);
+         "Enter match number to add game results to: ", round.roundNum);
   scanf("%d", &matchNum);
-  clearInputBuffer();
+  curMatch = round.matches[matchNum];
+
   printf("Please enter %s's score: ", "bob");
   scanf("%d", &player1Score);
+  curMatch.p1Scores[curMatch.gamesPlayed] = player1Score;
+
   printf("Please enter %s's score: ", "bill");
   scanf("%d", &player2Score);
+  curMatch.p1Scores[curMatch.gamesPlayed] = player2Score;
+
+  curMatch.gamesPlayed++;
+
+  return round;
 }
 
 void displayRound(int roundNum)
